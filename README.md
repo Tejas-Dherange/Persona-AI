@@ -8,7 +8,7 @@ Built using:
 - 🧱 **Next.js (App Router)**
 - 🎨 **Tailwind CSS** for clean, responsive UI
 
-> Try it live 👉 [(https://bino-chat-bot.vercel.app)](https://bino-chat-bot.vercel.app/)
+
 
 ---
 
