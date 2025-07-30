@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getSystemPrompt } from '@/lib/geminiPrompt';
-
+import { getCareerPrompt } from '@/lib/geminiPrompt';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
@@ -36,8 +36,8 @@ export async function POST(request) {
     });
 
     // Create the full prompt with system context
-    const systemPrompt = getSystemPrompt();
-    const fullPrompt = `${systemPrompt}\n\nUser: ${message}\n\nBino:`;
+    const systemPrompt = getCareerPrompt();
+    const fullPrompt = `${systemPrompt}\n\nUser: ${message}\n\nCareerGURU:`;
 
     // Create a ReadableStream for streaming response
     const encoder = new TextEncoder();
@@ -63,7 +63,7 @@ export async function POST(request) {
         } catch (error) {
           console.error('Streaming error:', error);
           const errorData = `data: ${JSON.stringify({ 
-            error: 'Failed to get response from Bino',
+            error: 'Failed to get response from CareerGURU',
             content: "I'm having some technical difficulties right now. Please try again in a moment! 🔧"
           })}\n\n`;
           controller.enqueue(encoder.encode(errorData));
@@ -89,7 +89,7 @@ export async function POST(request) {
     
     return Response.json(
       { 
-        error: 'Failed to get response from Bino',
+        error: 'Failed to get response from CareerGURU',
         reply: "I'm having some technical difficulties right now. Please try again in a moment! 🔧"
       },
       { status: 500 }

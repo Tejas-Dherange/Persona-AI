@@ -12,8 +12,8 @@ export default function Home() {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hey there! 👋 I'm Bino, your personal local services guru! \n\nNeed a reliable plumber? 🔧 Craving amazing food? 🍕 Looking for a quick ride? 🚗 Or maybe a great salon? ✨\n\nJust tell me what you need and your area, and I'll hook you up with the best local options! What can I help you find today? 😊",
-      sender: 'bot',
+     text: "Hey there! I'm CareerGURU, your friendly guide to all things career and engineering! 🎓💡\n\nNot sure which branch to choose? Curious about job roles, colleges, or what to do after 12th? I’ve got you covered! 🚀\n\nJust tell me what you're exploring – and I’ll help you figure it out, step by step. What would you like to know today? 😊",
+     sender: 'bot',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -176,8 +176,8 @@ export default function Home() {
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-wide">Bino</h1>
-              <p className="text-sm text-green-100 font-medium">Your Local Service Expert</p>
+              <h1 className="text-xl font-bold tracking-wide">CareerGURU</h1>
+              <p className="text-sm text-green-100 font-medium">Your personal Career Assistant</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
