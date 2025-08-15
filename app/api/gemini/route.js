@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getSystemPrompt } from '@/lib/geminiPrompt';
-import { getCareerPrompt } from '@/lib/geminiPrompt';
+// import { getSystemPrompt } from '@/lib/geminiPrompt';
+import {  getHiteshSirPersonaPrompt, getPiyushGargPersonaPrompt } from '@/lib/geminiPrompt';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function POST(request) {
   try {
-    const { message } = await request.json();
+    const { message, conversationHistory = [], mentor = 'hitesh' } = await request.json();
 
     if (!message || message.trim() === '') {
       return Response.json(
@@ -24,20 +24,105 @@ export async function POST(request) {
       );
     }
 
+    // Detect if web search might be helpful
+    const searchTriggers = [
+      'latest', 'recent', 'current', 'news', 'today', 'this year', '2024', '2025',
+      'what happened', 'recent updates', 'latest version', 'current price',
+      'breaking news', 'recent developments', 'market trends', 'stock price',
+      'weather', 'current events', 'recent changes', 'latest release'
+    ];
+    
+    const needsWebSearch = searchTriggers.some(trigger => 
+      message.toLowerCase().includes(trigger.toLowerCase())
+    );
+
+    let webSearchContext = '';
+    
+    // Perform web search if needed
+    if (needsWebSearch) {
+      try {
+        const searchResponse = await fetch(`${request.url.replace('/api/gemini', '/api/search')}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query: message })
+        });
+
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+          
+          if (searchData.instant_answer) {
+            webSearchContext = `\n\nCurrent web search results for "${message}":\n`;
+            webSearchContext += `Answer: ${searchData.instant_answer}\n`;
+            if (searchData.source) {
+              webSearchContext += `Source: ${searchData.source}\n`;
+            }
+          }
+          
+          if (searchData.related_topics && searchData.related_topics.length > 0) {
+            webSearchContext += `\nRelated information:\n`;
+            searchData.related_topics.forEach((topic, index) => {
+              webSearchContext += `${index + 1}. ${topic.title}\n`;
+            });
+          }
+          
+          if (searchData.fallback_message) {
+            webSearchContext += `\nNote: ${searchData.fallback_message}\n`;
+          }
+        }
+      } catch (searchError) {
+        console.error('Web search failed:', searchError);
+        // Continue without web search context
+      }
+    }
+
     // Get a generative model with streaming enabled
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       generationConfig: {
-        temperature: 0.7,
+        temperature: 1,
         topK: 1,
         topP: 1,
         maxOutputTokens: 2048,
       },
     });
 
-    // Create the full prompt with system context
-    const systemPrompt = getCareerPrompt();
-    const fullPrompt = `${systemPrompt}\n\nUser: ${message}\n\nCareerGURU:`;
+    // Create the full prompt with system context and conversation history
+    let systemPrompt;
+    switch (mentor) {
+      case 'piyush':
+        systemPrompt = getPiyushGargPersonaPrompt();
+        break;
+      case 'hitesh':
+      default:
+        systemPrompt = getHiteshSirPersonaPrompt();
+        break;
+    }
+    
+    // Build conversation context from history (keep last 10 messages to avoid token limits)
+    let conversationContext = '';
+    if (conversationHistory.length > 0) {
+      const recentHistory = conversationHistory.slice(-10); // Keep last 10 messages
+      conversationContext = '\n\nPrevious conversation:\n';
+      recentHistory.forEach((msg, index) => {
+        const role = msg.sender === 'user' ? 'User' : 'Assistant';
+        // Only include text content, skip empty or streaming messages
+        if (msg.text && msg.text.trim()) {
+          conversationContext += `${role}: ${msg.text}\n`;
+        }
+      });
+      conversationContext += '\nCurrent question:\n';
+    }
+    
+    // Combine all contexts
+    const fullPrompt = `${systemPrompt}${webSearchContext}${conversationContext}User: ${message}`;
+    
+    // Log the conversation context for debugging (optional)
+    console.log('Mentor:', mentor);
+    console.log('Web search performed:', needsWebSearch);
+    console.log('Conversation context length:', conversationHistory.length);
+    console.log('Recent history used:', conversationHistory.slice(-10).length);
 
     // Create a ReadableStream for streaming response
     const encoder = new TextEncoder();
@@ -47,6 +132,8 @@ export async function POST(request) {
         try {
           // Generate streaming response
           const result = await model.generateContentStream(fullPrompt);
+          console.log('Streaming chunk:', result.content);
+
           
           for await (const chunk of result.stream) {
             const chunkText = chunk.text();
@@ -63,7 +150,7 @@ export async function POST(request) {
         } catch (error) {
           console.error('Streaming error:', error);
           const errorData = `data: ${JSON.stringify({ 
-            error: 'Failed to get response from CareerGURU',
+            error: 'Failed to get response from ChatBot',
             content: "I'm having some technical difficulties right now. Please try again in a moment! 🔧"
           })}\n\n`;
           controller.enqueue(encoder.encode(errorData));
@@ -89,7 +176,7 @@ export async function POST(request) {
     
     return Response.json(
       { 
-        error: 'Failed to get response from CareerGURU',
+        error: 'Failed to get response from ChatBot',
         reply: "I'm having some technical difficulties right now. Please try again in a moment! 🔧"
       },
       { status: 500 }

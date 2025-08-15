@@ -197,3 +197,64 @@
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
 }
+
+/* Message Formatting Styles */
+.message-content {
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+.message-content h1, 
+.message-content h2, 
+.message-content h3, 
+.message-content h4, 
+.message-content h5, 
+.message-content h6 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.message-content ul, 
+.message-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.message-content li {
+  margin: 0.25rem 0;
+}
+
+.message-content p {
+  margin: 0.5rem 0;
+}
+
+.message-content pre {
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.message-content code {
+  font-family: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
+.message-content a {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  transition: all 0.2s ease;
+}
+
+.message-content a:hover {
+  text-decoration-style: solid;
+}
+
+/* Copy button animation */
+@keyframes copySuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.copy-success {
+  animation: copySuccess 0.3s ease-in-out;
+}
