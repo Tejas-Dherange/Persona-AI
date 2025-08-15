@@ -1,8 +1,17 @@
 // Web search API route
+import { applyRateLimit } from '@/lib/rateLimit';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
+    // Apply rate limiting for search requests
+    const rateLimitResult = applyRateLimit(request, 'search');
+    
+    if (!rateLimitResult.allowed) {
+      return rateLimitResult.response;
+    }
+
     const { query } = await request.json();
 
     if (!query || query.trim() === '') {
@@ -57,7 +66,12 @@ export async function POST(request) {
         }
       }
 
-      return Response.json(searchResults);
+      return Response.json(searchResults, {
+        headers: {
+          // Add rate limit headers
+          ...rateLimitResult.headers,
+        }
+      });
 
     } catch (searchError) {
       console.error('Search API Error:', searchError);
@@ -67,6 +81,10 @@ export async function POST(request) {
         query: query,
         error: 'Search temporarily unavailable',
         fallback_message: "I couldn't search the web right now, but I'll answer based on my existing knowledge."
+      }, {
+        headers: {
+          ...rateLimitResult.headers,
+        }
       });
     }
 

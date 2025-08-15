@@ -180,7 +180,19 @@ function Dashboard() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        // Handle different types of errors
+        if (response.status === 429) {
+          // Rate limit error
+          const errorData = await response.json().catch(() => ({}));
+          const retryAfter = errorData.retryAfter || 60;
+          const minutes = Math.ceil(retryAfter / 60);
+          
+          throw new Error(`Rate limit exceeded. Please wait ${minutes} minute${minutes !== 1 ? 's' : ''} before sending more messages. 🕐`);
+        } else if (response.status >= 500) {
+          throw new Error('Server error. Please try again in a moment. 🔧');
+        } else {
+          throw new Error('Failed to get response. Please try again. ❌');
+        }
       }
 
       const reader = response.body.getReader();

@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 // import { getSystemPrompt } from '@/lib/geminiPrompt';
 import {  getHiteshSirPersonaPrompt, getPiyushGargPersonaPrompt } from '@/lib/geminiPrompt';
+import { applyRateLimit } from '@/lib/rateLimit';
+
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +10,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function POST(request) {
   try {
+    // Apply rate limiting first
+    const rateLimitResult = applyRateLimit(request, 'chat');
+    
+    if (!rateLimitResult.allowed) {
+      return rateLimitResult.response;
+    }
+
     const { message, conversationHistory = [], mentor = 'hitesh' } = await request.json();
 
     if (!message || message.trim() === '') {
@@ -79,7 +88,7 @@ export async function POST(request) {
 
     // Get a generative model with streaming enabled
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         temperature: 1,
         topK: 1,
@@ -168,6 +177,8 @@ export async function POST(request) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Headers': 'Content-Type',
+        // Add rate limit headers
+        ...rateLimitResult.headers,
       },
     });
 
