@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.3.3-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
 An interactive AI chatbot application that lets you chat with personalized AI versions of popular tech educators **Hitesh Choudhary** and **Piyush Garg**. Experience their unique teaching styles, get personalized coding advice, and access their resources through intelligent conversations.
-
+![alt text](image.png)
 ## 🌟 Features
 
 ### 🎭 Dual AI Personas
